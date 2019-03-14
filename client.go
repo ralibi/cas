@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
+	"github.com/jmoiron/sqlx"
 )
 
 // Client configuration options
@@ -18,6 +19,7 @@ type Options struct {
 	SendService bool         // Custom sendService to determine whether you need to send service param
 	URLScheme   URLScheme    // Custom url scheme, can be used to modify the request urls for the client
 	Cookie      *http.Cookie // http.Cookie options, uses Path, Domain, MaxAge, HttpOnly, & Secure
+	DbURL       string
 }
 
 // Client implements the main protocol
@@ -44,7 +46,12 @@ func NewClient(options *Options) *Client {
 	if options.Store != nil {
 		tickets = options.Store
 	} else {
-		tickets = &MemoryStore{}
+		if options.DbURL == "" {
+			tickets = &MemoryStore{}
+		} else {
+			db, _ := sqlx.Open("postgres", options.DbURL)
+			tickets = &DbStore{db: db}
+		}
 	}
 
 	var urlScheme URLScheme
