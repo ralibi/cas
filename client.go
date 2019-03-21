@@ -366,7 +366,7 @@ func (c *Client) clearSession(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		c.deleteSession(s)
+		c.deleteSession(cookie.Value)
 	}
 
 	clearCookie(w, cookie)
