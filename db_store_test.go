@@ -69,7 +69,7 @@ func TestShouldDeleteAuthenticationResponses(t *testing.T) {
 	defer sqlxDB.Close()
 	defer db.Close()
 
-	mock.ExpectExec(`UPDATE authentication_responses SET deleted_at = NOW\(\) WHERE id = .+ AND deleted_at IS NULL`).WithArgs("ticket-id-01").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`DELETE FROM authentication_responses WHERE username IN \(SELECT username FROM authentication_responses WHERE id = .+\)`).WithArgs("ticket-id-01").WillReturnResult(sqlmock.NewResult(1, 1))
 
 	dbStore := &DbStore{db: sqlxDB}
 
@@ -93,7 +93,7 @@ func TestShouldClearAuthenticationResponses(t *testing.T) {
 	defer sqlxDB.Close()
 	defer db.Close()
 
-	mock.ExpectExec(`UPDATE authentication_responses SET deleted_at = NOW\(\) WHERE deleted_at IS NULL`).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`DELETE FROM authentication_responses WHERE 1 = 1`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	dbStore := &DbStore{db: sqlxDB}
 

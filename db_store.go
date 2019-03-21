@@ -10,10 +10,10 @@ type DbStore struct {
 	db *sqlx.DB
 }
 
-const readQuery = "SELECT id, username, proxy_granting_ticket, is_new_login, is_remembered_login FROM authentication_responses WHERE id = $1 AND deleted_at IS NULL"
+const readQuery = "SELECT id, username, proxy_granting_ticket, is_new_login, is_remembered_login FROM authentication_responses WHERE id = $1"
 const writeQuery = "INSERT INTO authentication_responses (id, username, proxy_granting_ticket, authentication_date, is_new_login, is_remembered_login) VALUES ($1, $2, $3, $4, $5, $6)"
-const deleteQuery = "UPDATE authentication_responses SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL"
-const clearQuery = "UPDATE authentication_responses SET deleted_at = NOW() WHERE deleted_at IS NULL"
+const deleteQuery = "DELETE FROM authentication_responses WHERE username IN (SELECT username FROM authentication_responses WHERE id = $1)"
+const clearQuery = "DELETE FROM authentication_responses WHERE 1 = 1"
 
 // Read returns the AuthenticationResponse for a ticket
 func (s *DbStore) Read(id string) (*AuthenticationResponse, error) {
