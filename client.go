@@ -8,18 +8,18 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
-	"github.com/jmoiron/sqlx"
 )
 
 // Client configuration options
 type Options struct {
-	URL         *url.URL     // URL to the CAS service
-	Store       TicketStore  // Custom TicketStore, if nil a MemoryStore will be used
-	Client      *http.Client // Custom http client to allow options for http connections
-	SendService bool         // Custom sendService to determine whether you need to send service param
-	URLScheme   URLScheme    // Custom url scheme, can be used to modify the request urls for the client
-	Cookie      *http.Cookie // http.Cookie options, uses Path, Domain, MaxAge, HttpOnly, & Secure
-	DbURL       string
+	URL          *url.URL       // URL to the CAS service
+	Store        TicketStore    // Custom TicketStore, if nil a MemoryStore will be used
+	SessionStore KvSessionStore // Custom TicketStore, if nil a MemoryStore will be used
+	Client       *http.Client   // Custom http client to allow options for http connections
+	SendService  bool           // Custom sendService to determine whether you need to send service param
+	URLScheme    URLScheme      // Custom url scheme, can be used to modify the request urls for the client
+	Cookie       *http.Cookie   // http.Cookie options, uses Path, Domain, MaxAge, HttpOnly, & Secure
+	DbURL        string
 }
 
 // Client implements the main protocol
@@ -46,16 +46,14 @@ func NewClient(options *Options) *Client {
 	var kvSessionStore KvSessionStore
 	if options.Store != nil {
 		tickets = options.Store
-		kvSessionStore = &KvSession{sessions: make(map[string]string)}
 	} else {
-		if options.DbURL == "" {
-			tickets = &MemoryStore{}
-			kvSessionStore = &KvSession{sessions: make(map[string]string)}
-		} else {
-			db, _ := sqlx.Open("postgres", options.DbURL)
-			tickets = &DbStore{db: db}
-			kvSessionStore = &KvSessionDb{db: db}
-		}
+		tickets = &MemoryStore{}
+	}
+
+	if options.SessionStore != nil {
+		kvSessionStore = options.SessionStore
+	} else {
+		kvSessionStore = &KvSession{sessions: make(map[string]string)}
 	}
 
 	var urlScheme URLScheme
